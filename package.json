@@ -33,6 +33,7 @@
     "node-fetch": "^3.2.3",
     "pg": "^8.7.3",
     "pg-connection-string": "^2.5.0",
+    "uuid": "^8.3.2",
     "validator": "^13.7.0"
   }
 }

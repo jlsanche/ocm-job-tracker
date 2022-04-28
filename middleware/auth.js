@@ -20,7 +20,7 @@ const auth = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.log('theres an error')
+    console.log('theres an error processing jwt')
     throw new UnAuthenticatedError("Authentication Invalid");
   }
 }
