@@ -7,22 +7,20 @@ const auth = async (req, res, next) => {
 
   if (!authHeader || !authHeader.startsWith("Bearer")) {
 
-    console.log('inbearer')
     throw new UnAuthenticatedError("Authentication Invalid");
   }
 
-  const token = authHeader.split(' ')[1];
-  try {
-    const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    req.user = { userId: payload.user_id };  //payload is the User model obj
+    const token = authHeader.split(' ')[1];
+  
 
-    console.log('I am here in token ')
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, user) =>{
+      if(error) return res.status(401).json({ error: error.message})
+      req.user = user;
+      next();
+    });
 
-    next();
-  } catch (error) {
-    console.log('theres an error processing jwt')
-    throw new UnAuthenticatedError("Authentication Invalid");
-  }
+    console.log('jwt !!!!!!')
+  
 }
 
 export default auth;

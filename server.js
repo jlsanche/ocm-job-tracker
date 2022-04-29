@@ -1,12 +1,12 @@
 import express from "express";
 const app = express();
 import dotenv from "dotenv";
-import connectDB from "./db/connect.js";
+import {connectDB} from "./db/connect.js";
 import notFoundMiddleware from "./middleware/not-found.js";
 import errorHandlerMiddleware from "./middleware/error-handler.js";
 import authRouter from './routes/authRoutes.js'
 import jobsRouter from './routes/jobsRoutes.js'
-import clientsRouter from './routes/clientsRoutes.js'
+import customersRouter from './routes/customersRoutes.js'
 import 'express-async-errors'
 import authenticateUser from './middleware/auth.js';
 import morgan from 'morgan';
@@ -25,7 +25,7 @@ app.get("/api/v1", (req, res) => {
 });
 
 app.use('/api/v1/auth', authRouter)
-app.use('/api/v1/clients',authenticateUser, clientsRouter)
+app.use('/api/v1/customers',authenticateUser, customersRouter)
 app.use('/api/v1/jobs',authenticateUser, jobsRouter)
 
 

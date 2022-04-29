@@ -1,50 +1,58 @@
 import { StatusCodes } from "http-status-codes";
 import moment from "moment";
 import auth from "../middleware/auth.js";
-
 import {
   BadRequestError,
   NotFoundError,
   UnAuthenticatedError,
 } from "../errors/index.js";
-
 import bcrypt from "bcrypt"
+import pkg from 'pg';
 
-const createClient = async (req, res) => {
-  const { userName, firstName, lastName, password } = req.body;
+const { Pool} = pkg;
 
-  if (!userName || !lastName || !firstName || !password) {
+
+const connectionString = process.env.DATABASE_URL;
+const pool = new Pool({
+  connectionString,
+})
+
+
+const createCustomer = async (req, res) => {
+  const { firstName, lastName, phone } = req.body;
+
+  const usr = req.user.user_id;
+  console.log(usr)
+
+  if ( !lastName || !firstName || !phone) {
     throw new BadRequestError("Please provide all values");
   }
 
-  // try {
-  //   const hashedPassword = await bcrypt.hash(req.body.password, 10);
-  //   const newUser = pool.query(
-  //     "INSERT INTO users (user_username, user_firstName, user_lastName, user_password) VALUES ($1,$2,$3,$4) RETURNING *",
-  //     [req.body.userName, req.body.firstName, req.body.lastName, hashedPassword]
-  //   );
+  try {
+   
+    const newCustomer =  await pool.query(
+      'INSERT INTO customers (customer_firstName, customer_lastName, customer_phone) VALUES ($1,$2,$3) RETURNING *',
+      [ req.body.firstName, req.body.lastName, req.body.phone]
+    );
 
-  //   res.json(jwtTokens(newUser.rows[0]))
-  // } catch (error) {
-  //   res.status(500).json({error: error.message })
-  // }
+  
+    res.status(StatusCodes.CREATED).json({newCustomer});
+    
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 
 
 
-  // const clientAlreadyExists = await Client.findOne({ email, phone });
-  // if (clientAlreadyExists) {
-  //   throw new BadRequestError("Client already exists");
-  // }
 
-  // const client = await Client.create({ name, lastName, email, phone, notes });
 
-  // res.status(StatusCodes.CREATED).json({
-  //   name: client.name,
-  //   lastName: client.lastName,
-  //   email: client.email,
-  //   phone: client.phone,
-  //   notes: client.notes,
-  // });
+
+
+
+
+
+
 };
 
 const updateClient = async (req, res) => {
@@ -154,4 +162,4 @@ const getClientsAndJobs = async (req, res) => {
     .json({ clientsAndJobs, totalClientsAndJobs, numOfPages });
 };
 
-export { createClient, updateClient, getClientsAndJobs, getClientList };
+export { createCustomer, updateClient, getClientsAndJobs, getClientList };

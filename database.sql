@@ -1,9 +1,5 @@
 
 
-
-
-
-
 CREATE TABLE users (
     user_id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_firstname TEXT NOT NULL,
@@ -22,10 +18,9 @@ CREATE TABLE customers (
     customer_email TEXT UNIQUE,
     customer_phone TEXT UNIQUE NOT NULL
 
-
-
 );
 
+--ALTER TYPE enum_type ADD VALUE 'new_value'; -- appends to list
 CREATE TYPE job_status AS ENUM('staged', 'wip', 'on hold', 'completed');
 CREATE TYPE job_type AS ENUM('  oil change', 
                                 'brakes', 
@@ -45,6 +40,7 @@ CREATE TABLE jobs (
     completed_at TIMESTAMPTZ,
     job_notes TEXT,
     created_by uuid REFERENCES users(user_id)
+    job_is_for uuid REFERENCES CUSTOMERS(customer_id)
 
 );
 

@@ -2,8 +2,6 @@ import { StatusCodes } from "http-status-codes";
 import bcrypt from "bcrypt";
 import {jwtTokens} from "../utils/jwt-helpers.js";
 import { BadRequestError, UnAuthenticatedError } from "../errors/index.js";
-import dotenv from "dotenv";
-dotenv.config()
 
 //TODO: refactor Pool instance
 import pkg from 'pg';
@@ -31,8 +29,6 @@ const register = async (req, res) => {
       [req.body.userName, req.body.firstName, req.body.lastName, hashedPassword]
     );
 
-   
-
     const token =jwtTokens(newUser.rows[0])
 
     res.status(StatusCodes.CREATED).json({token, newUser});
@@ -44,30 +40,32 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { userName, password } = req.body;
 
-  if (!email || !password) {
+  
+
+  if (!userName || !password) {
     throw new BadRequestError("Please provide all values");
   }
 
-  const user = await User.findOne({ email }).select("+password"); //override select model schema
 
-  if (!user) {
-    throw new UnAuthenticatedError("Invalid credentials");
-  }
+  const user = await pool.query('SELECT * FROM users WHERE user_username = $1', [userName]);
 
-  const isPasswordCorrect = await user.comparePassword(password);
+  if(user.rows.length === 0) throw new UnAuthenticatedError("Invalid credentials");
+
+  const isPasswordCorrect = await bcrypt.compare(password, user.rows[0].user_password);
 
   if (!isPasswordCorrect) {
     throw new UnAuthenticatedError("Invalid credentials");
   }
 
-  const token = user.createJWT();
-  user.password = undefined;
+  let tokens = jwtTokens(user.rows[0]);
 
-  res.status(StatusCodes.OK).json({ user, token, location: user.location });
+  res.cookie('refresh_token', tokens.refreshToken, {...(process.env.COOKIE_DOMAIN && { domain: process.env.COOKIE_DOMAIN }), httpOnly: true, sameSite: 'none', secure: true  })
+  res.status(StatusCodes.OK).json({tokens, user})
+
 };
-//TODO: handle error when user tries to update with an email already in use
+
 
 const updateUser = async (req, res) => {
   const { email, name, lastName, location } = req.body;

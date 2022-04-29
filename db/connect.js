@@ -2,6 +2,10 @@ import pkg from 'pg';
 
 const { Pool} = pkg;
 
+import dotenv from 'dotenv';
+import { query } from 'express';
+dotenv.config()
+
 const connectDB = (url) => {
 
    
@@ -35,9 +39,22 @@ const connectDB = (url) => {
     })
 }
 
+const pool = () => {
+
+    const connectionString = process.env.DATABASE_URL;
+
+    const pool = new Pool({
+        connectionString,
+    })
+
+    const balls = {query: (text, params) => pool.query(text, params)}
+
+    return balls
+
+}
 
 
 
 
 
-export default connectDB
+export { connectDB, pool}
