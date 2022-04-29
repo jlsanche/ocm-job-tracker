@@ -2,18 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import bcrypt from "bcrypt";
 import {jwtTokens} from "../utils/jwt-helpers.js";
 import { BadRequestError, UnAuthenticatedError } from "../errors/index.js";
-
-//TODO: refactor Pool instance
-import pkg from 'pg';
-
-const { Pool} = pkg;
-
-
-const connectionString = process.env.DATABASE_URL;
-const pool = new Pool({
-  connectionString,
-})
-
+import pool from '../db/pool.js'
 
 const register = async (req, res) => {
   const { userName, firstName, lastName, password } = req.body;
