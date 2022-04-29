@@ -1,34 +1,50 @@
 import { StatusCodes } from "http-status-codes";
 import moment from "moment";
-import mongoose from "mongoose";
+import auth from "../middleware/auth.js";
+
 import {
   BadRequestError,
   NotFoundError,
   UnAuthenticatedError,
 } from "../errors/index.js";
-import Client from "../models/Client.js";
+
+import bcrypt from "bcrypt"
 
 const createClient = async (req, res) => {
-  const { name, lastName, email, phone, notes } = req.body;
+  const { userName, firstName, lastName, password } = req.body;
 
-  if (!name || !lastName || !phone || !email) {
+  if (!userName || !lastName || !firstName || !password) {
     throw new BadRequestError("Please provide all values");
   }
 
-  const clientAlreadyExists = await Client.findOne({ email, phone });
-  if (clientAlreadyExists) {
-    throw new BadRequestError("Client already exists");
-  }
+  // try {
+  //   const hashedPassword = await bcrypt.hash(req.body.password, 10);
+  //   const newUser = pool.query(
+  //     "INSERT INTO users (user_username, user_firstName, user_lastName, user_password) VALUES ($1,$2,$3,$4) RETURNING *",
+  //     [req.body.userName, req.body.firstName, req.body.lastName, hashedPassword]
+  //   );
 
-  const client = await Client.create({ name, lastName, email, phone, notes });
+  //   res.json(jwtTokens(newUser.rows[0]))
+  // } catch (error) {
+  //   res.status(500).json({error: error.message })
+  // }
 
-  res.status(StatusCodes.CREATED).json({
-    name: client.name,
-    lastName: client.lastName,
-    email: client.email,
-    phone: client.phone,
-    notes: client.notes,
-  });
+
+
+  // const clientAlreadyExists = await Client.findOne({ email, phone });
+  // if (clientAlreadyExists) {
+  //   throw new BadRequestError("Client already exists");
+  // }
+
+  // const client = await Client.create({ name, lastName, email, phone, notes });
+
+  // res.status(StatusCodes.CREATED).json({
+  //   name: client.name,
+  //   lastName: client.lastName,
+  //   email: client.email,
+  //   phone: client.phone,
+  //   notes: client.notes,
+  // });
 };
 
 const updateClient = async (req, res) => {
@@ -80,9 +96,7 @@ const getClientsAndJobs = async (req, res) => {
   //   });
   // }
 
-  const queryObject = {
-   
-  };
+  const queryObject = {};
 
   // if (status && status !== "all") {
   //   queryObject.status = status;
@@ -98,22 +112,19 @@ const getClientsAndJobs = async (req, res) => {
   }
 
   const result = await Client.find(
-  //   {
-  //   $or: [
-  //     { name: { $regex: client, $options: "i" } },
-  //     { phone: { $regex: client } },
-  //     { lastName: { $regex: client, $options: "i" } },
-  //   ],
-  // }
-  queryObject
-  
-  ).populate('job');
+    //   {
+    //   $or: [
+    //     { name: { $regex: client, $options: "i" } },
+    //     { phone: { $regex: client } },
+    //     { lastName: { $regex: client, $options: "i" } },
+    //   ],
+    // }
+    queryObject
+  ).populate("job");
 
-console.log(result)
-console.log(result[0].job[0].createdAt);
+  console.log(result);
+  console.log(result[0].job[0].createdAt);
 
-
-    
   if (sort === "latest") {
     result = result.sort("-createdAt");
   }
@@ -138,7 +149,8 @@ console.log(result[0].job[0].createdAt);
   const totalClientsAndJobs = await Client.countDocuments(queryObject);
   const numOfPages = Math.ceil(total / limit);
 
-  res.status(StatusCodes.OK)
+  res
+    .status(StatusCodes.OK)
     .json({ clientsAndJobs, totalClientsAndJobs, numOfPages });
 };
 

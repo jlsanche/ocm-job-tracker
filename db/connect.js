@@ -26,10 +26,16 @@ const connectDB = (url) => {
 
             console.log(res.rows[0].theTime);
 
+            
+
             pool.end()
         })
+  
+
     })
 }
+
+
 
 
 

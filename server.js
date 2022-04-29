@@ -10,6 +10,7 @@ import clientsRouter from './routes/clientsRoutes.js'
 import 'express-async-errors'
 import authenticateUser from './middleware/auth.js';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser'
 dotenv.config();
 
 if (process.env.NODE_ENV !== 'production') {
@@ -17,6 +18,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 app.use(express.json())
+app.use(cookieParser());
 app.get("/api/v1", (req, res) => {
 
   res.json({ msg: "foo"});
