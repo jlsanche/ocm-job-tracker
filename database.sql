@@ -39,8 +39,8 @@ CREATE TABLE jobs (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     completed_at TIMESTAMPTZ,
     job_notes TEXT,
-    created_by uuid REFERENCES users(user_id)
-    job_is_for uuid REFERENCES CUSTOMERS(customer_id)
+    created_by uuid REFERENCES users(user_id),
+    job_is_for uuid REFERENCES customers(customer_id)
 
 );
 

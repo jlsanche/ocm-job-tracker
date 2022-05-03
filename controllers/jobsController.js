@@ -7,34 +7,38 @@ import {
   NotFoundError,
   UnAuthenticatedError,
 } from "../errors/index.js";
-import Client from "../models/Client.js";
-import Job from "../models/Job.js";
-
+import pool from '../db/pool.js'
 import checkPermissions from "../utils/checkPermissions.js";
 
+
 const createJob = async (req, res) => {
-  const { client: clientId } = req.params;
-  const { jobType, notes } = req.body;
+  const {job_is_for, job_type, job_notes } = req.body
 
-  if (!jobType) {
-    throw new BadRequestError("Please provide job type!");
+  if (!job_is_for || !job_type) {
+    throw new BadRequestError('Please provide all values')   
   }
 
-  const client = await Client.findById(clientId);
+  const usr = req.user.user_id;
+  console.log(usr)
 
-  if (!client) {
-    throw new BadRequestError("Client does not exist");
+  const created = new Date()
+
+  try {
+
+    const newJob =  await pool.query(
+      'INSERT INTO jobs (job_is_for,job_stat, job_typ, created_at, job_notes, created_by) VALUES ($1,$2,$3, $4, $5, $6) RETURNING *',
+      [ req.body.job_is_for,"staged", req.body.job_type, created, req.body.job_notes, usr]
+    );
+  
+    res.status(StatusCodes.CREATED).json({newJob});
+    
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-  req.body.createdBy = req.user.userId;
 
-  req.body.client = clientId;
 
-  const job = await Job.create(req.body);
-  client.job.push(job);
-
-  client.save();
-
-  res.status(StatusCodes.CREATED).json({ job });
+  
 };
 
 const getAllJobs = async (req, res) => {

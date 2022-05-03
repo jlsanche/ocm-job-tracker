@@ -6,25 +6,18 @@ import {
   NotFoundError,
   UnAuthenticatedError,
 } from "../errors/index.js";
-import bcrypt from "bcrypt"
-import pkg from 'pg';
-
-const { Pool} = pkg;
+import pool from '../db/pool.js'
 
 
-const connectionString = process.env.DATABASE_URL;
-const pool = new Pool({
-  connectionString,
-})
 
 
 const createCustomer = async (req, res) => {
-  const { firstName, lastName, phone } = req.body;
+  const { firstName, lastName, phone, created_by } = req.body;
 
   const usr = req.user.user_id;
   console.log(usr)
 
-  if ( !lastName || !firstName || !phone) {
+  if ( !lastName || !firstName || !phone  || !created_by) {
     throw new BadRequestError("Please provide all values");
   }
 
@@ -42,16 +35,6 @@ const createCustomer = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-
-
-
-
-
-
-
-
-
-
 
 };
 
