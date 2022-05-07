@@ -6,36 +6,28 @@ import {
   NotFoundError,
   UnAuthenticatedError,
 } from "../errors/index.js";
-import pool from '../db/pool.js'
-
-
-
+import pool from "../db/pool.js";
 
 const createCustomer = async (req, res) => {
   const { firstName, lastName, phone, created_by } = req.body;
 
   const usr = req.user.user_id;
-  console.log(usr)
+  console.log(usr);
 
-  if ( !lastName || !firstName || !phone  || !created_by) {
+  if (!lastName || !firstName || !phone || !created_by) {
     throw new BadRequestError("Please provide all values");
   }
 
   try {
-   
-    const newCustomer =  await pool.query(
-      'INSERT INTO customers (customer_firstName, customer_lastName, customer_phone) VALUES ($1,$2,$3) RETURNING *',
-      [ req.body.firstName, req.body.lastName, req.body.phone]
+    const newCustomer = await pool.query(
+      "INSERT INTO customers (customer_firstName, customer_lastName, customer_phone) VALUES ($1,$2,$3) RETURNING *",
+      [req.body.firstName, req.body.lastName, req.body.phone]
     );
 
-  
-    res.status(StatusCodes.CREATED).json({newCustomer});
-    
-
+    res.status(StatusCodes.CREATED).json({ newCustomer });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-
 };
 
 const updateClient = async (req, res) => {
@@ -57,92 +49,55 @@ const updateClient = async (req, res) => {
   res.status(StatusCodes.OK).json({ name, lastName, email, phone });
 };
 
-const getClientList = async (req, res) => {
-  const { search: client } = req.params;
+const getCustomersList = async (req, res) => {
+  try {
+    const cust = await pool.query("select * from customers");
 
-  console.log("searching: " + client);
+    if (cust.rowCount === 0) {
+      res.status(StatusCodes.NOT_FOUND).json("No customers exists");
+    }
 
-  const clientList = await Client.find({
-    $or: [
-      { name: { $regex: client, $options: "i" } },
-      { phone: { $regex: client } },
-      { lastName: { $regex: client, $options: "i" } },
-    ],
-  });
-
-  res.status(StatusCodes.OK).json({ clientList });
+    res.status(StatusCodes.OK).json({ cust });
+  } catch (error) {
+    throw new BadRequestError("Error fetching customers");
+  }
 };
 
-const getClientsAndJobs = async (req, res) => {
-  const { search, jobType, status, sort } = req.query;
+const getCustomerSearch = async (req, res) => {
+  const { customer } = req.query;
 
-  // (err, data) => {
-  //   if (err) {
-  //     console.log("error on regex");
-  //   }
+  //`/jobs?page=${page}&lastNm=${searchLastNm}&FirstNm=${searchFirstNm}&phone=${searchPhone}&sort=${sort}`
+  ///customers/search?customer=${custSearch}
+  try {
+    if (customer) {
 
-  //   const clientMap = {};
-  //   data.forEach((client) => {
-  //     clientMap[client._id] = client;
-  //   });
-  // }
+      const upp = customer.charAt(0).toUpperCase() + customer.slice(1);
+      //const fName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+      console.log('upp', upp )
 
-  const queryObject = {};
+      const search = await pool.query(
+        `select * from customers where customer_lastname like '%'||$1||'%' or customer_firstname like '%'||$1||'%' or customer_phone like '%'||$1||'%' `,
+        [upp]
+      )
 
-  // if (status && status !== "all") {
-  //   queryObject.status = status;
-  // }
+      if (search.rowCount === 0) {
+        res
+          .status(StatusCodes.NOT_FOUND)
+          .json("No customers found");
+      }
 
-  // if (jobType && jobType !== "all") {
-  //   queryObject.jobType= jobType;
-  // }
+      res.status(StatusCodes.OK).json({ search });
 
-  if (search) {
-    queryObject.name = { $regex: search, $options: "i" };
-    //queryObject.lastName = { $regex: search, $options: "i" };
+     
+    }
+
+    
+
+  } catch (error) {
+
+    console.log(error)
+
   }
-
-  const result = await Client.find(
-    //   {
-    //   $or: [
-    //     { name: { $regex: client, $options: "i" } },
-    //     { phone: { $regex: client } },
-    //     { lastName: { $regex: client, $options: "i" } },
-    //   ],
-    // }
-    queryObject
-  ).populate("job");
-
-  console.log(result);
-  console.log(result[0].job[0].createdAt);
-
-  if (sort === "latest") {
-    result = result.sort("-createdAt");
-  }
-  if (sort === "oldest") {
-    result = result.sort("createdAt");
-  }
-  if (sort === "a-z") {
-    result = result.sort("name");
-  }
-  if (sort === "z-a") {
-    result = result.sort("-name");
-  }
-
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
-
-  result = result.skip(skip).limit(limit);
-
-  const clientsAndJobs = await result;
-
-  const totalClientsAndJobs = await Client.countDocuments(queryObject);
-  const numOfPages = Math.ceil(total / limit);
-
-  res
-    .status(StatusCodes.OK)
-    .json({ clientsAndJobs, totalClientsAndJobs, numOfPages });
 };
 
-export { createCustomer, updateClient, getClientsAndJobs, getClientList };
+export { createCustomer, updateClient, getCustomersList, getCustomerSearch };

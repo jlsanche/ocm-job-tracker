@@ -22,7 +22,7 @@ CREATE TABLE customers (
 
 --ALTER TYPE enum_type ADD VALUE 'new_value'; -- appends to list
 CREATE TYPE job_status AS ENUM('staged', 'wip', 'on hold', 'completed');
-CREATE TYPE job_type AS ENUM('  oil change', 
+CREATE TYPE job_type AS ENUM(   'oil change', 
                                 'brakes', 
                                 'suspension', 
                                 'engine', 

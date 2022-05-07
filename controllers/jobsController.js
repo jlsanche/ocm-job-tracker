@@ -7,38 +7,38 @@ import {
   NotFoundError,
   UnAuthenticatedError,
 } from "../errors/index.js";
-import pool from '../db/pool.js'
+import pool from "../db/pool.js";
 import checkPermissions from "../utils/checkPermissions.js";
 
-
 const createJob = async (req, res) => {
-  const {job_is_for, job_type, job_notes } = req.body
+  const { job_is_for, job_type, job_notes } = req.body;
 
   if (!job_is_for || !job_type) {
-    throw new BadRequestError('Please provide all values')   
+    throw new BadRequestError("Please provide all values");
   }
 
   const usr = req.user.user_id;
-  console.log(usr)
+  console.log(usr);
 
-  const created = new Date()
+  const created = new Date();
 
   try {
-
-    const newJob =  await pool.query(
-      'INSERT INTO jobs (job_is_for,job_stat, job_typ, created_at, job_notes, created_by) VALUES ($1,$2,$3, $4, $5, $6) RETURNING *',
-      [ req.body.job_is_for,"staged", req.body.job_type, created, req.body.job_notes, usr]
+    const newJob = await pool.query(
+      "INSERT INTO jobs (job_is_for,job_stat, job_typ, created_at, job_notes, created_by) VALUES ($1,$2,$3, $4, $5, $6) RETURNING *",
+      [
+        req.body.job_is_for,
+        "staged",
+        req.body.job_type,
+        created,
+        req.body.job_notes,
+        usr,
+      ]
     );
-  
-    res.status(StatusCodes.CREATED).json({newJob});
-    
 
+    res.status(StatusCodes.CREATED).json({ newJob });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-
-
-  
 };
 
 const getAllJobs = async (req, res) => {
@@ -48,7 +48,6 @@ const getAllJobs = async (req, res) => {
 
   const queryObject = {
     createdBy: req.user.userId,
-    
   };
 
   if (status && status !== "all") {
@@ -60,12 +59,12 @@ const getAllJobs = async (req, res) => {
   }
 
   if (search) {
-    queryObject.jobType = { $regex: search, $options: 'i'};
+    queryObject.jobType = { $regex: search, $options: "i" };
   }
 
-  let result = Job.find(queryObject); 
+  let result = Job.find(queryObject);
 
-  console.log('client lastname' + result)
+  console.log("client lastname" + result);
 
   if (sort === "latest") {
     result = result.sort("-createdAt");
@@ -110,7 +109,7 @@ const deleteJob = async (req, res) => {
 
 const updateJob = async (req, res) => {
   const { id: jobId } = req.params;
-  const { jobType} = req.body; //fields to update
+  const { jobType } = req.body; //fields to update
 
   if (!jobType) {
     throw new BadRequestError("Please provide all values");
